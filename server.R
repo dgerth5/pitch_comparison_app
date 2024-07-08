@@ -3,7 +3,14 @@ library(tidyverse)
 library(lsa)
 library(formattable)
 
-norm_df <- readRDS("final_data.RDS")
+preprocessed_data <- readRDS("final_data.RDS")
+
+metrics_smry <- preprocessed_data$metrics_smry
+primary_fb <- preprocessed_data$primary_fb
+df1 <- preprocessed_data$df1
+rel_pt <- preprocessed_data$rel_pt
+pitch_dat <- preprocessed_data$pitch_dat
+norm_df <- preprocessed_data$norm_df
 
 server <- function(input, output) {
   filtered_data <- reactive({

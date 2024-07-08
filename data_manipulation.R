@@ -58,4 +58,4 @@ norm_df <- df1 %>%
          n_hb = (h_break - h_break_mean) / h_break_sd,
          n_vb = (v_break - v_break_mean) / v_break_sd)
 
-saveRDS(norm_df, "final_data.RDS")
+saveRDS(list(metrics_smry = metrics_smry, primary_fb = primary_fb, df1 = df1, rel_pt = rel_pt, pitch_dat = pitch_dat, norm_df = norm_df), "final_data.RDS")

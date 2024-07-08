@@ -1,6 +1,7 @@
 library(tidyverse)
+library(readr)
 
-statcast_data2024 <- read_csv("C:/Users/david/Downloads/statcast_data_2024_2.csv")
+statcast_data2024 <- read_csv("statcast_data_2024_2.csv")
 
 metrics_smry <- statcast_data2024 %>%
   drop_na(release_pos_x, release_pos_z, release_speed, pfx_x, pfx_z) %>%

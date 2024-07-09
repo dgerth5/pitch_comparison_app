@@ -9,7 +9,8 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                                      h3("Release Point"),
                                      selectInput("release_point", "Throwing Hand", choices = c("R", "L")),
                                      numericInput("H_Rel", "Horizontal Release Point (ft)", value = -1.5),
-                                     numericInput("V_Rel", "Vertical Release Point (ft)", value = 6.0)),
+                                     numericInput("V_Rel", "Vertical Release Point (ft)", value = 6.0),
+                                     numericInput("Ext", "Extension (ft)", value = 6.5)),
                               column(4,
                                      h3("Fastball Characteristics"),
                                      selectInput("fastball_type", "Primary Fastball Type", choices = c("FF", "SI", "FC")),
@@ -18,7 +19,7 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                                      numericInput("V_Break", "IVB (in)", value = 15)),
                               column(4,
                                      h3("Similarity Threshold"),
-                                     selectInput("similarity_threshold", "Threshold", choices = c("50%", "75%", "80%", "90%"))
+                                     selectInput("similarity_threshold", "Threshold", choices = c("50%", "66%", "75%", "80%", "90%"))
                               )
                             ),
                             hr(),
@@ -31,6 +32,13 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                             div(style = "text-align: center;", h3("Similar Players and Their Scores")),
                             div(style = "display: flex; justify-content: center;", 
                                 div(style = "width: 80%;", formattableOutput("similarPlayersTable")))
+                          )
+                 ),
+                 tabPanel("MLB Pitcher Data",
+                          fluidPage(
+                            div(style = "text-align: center;", h3("Raw MLB Pitcher Data")),
+                            div(style = "display: flex; justify-content: center;", 
+                                div(style = "width: 80%;", formattableOutput("mlbPitcherData")))
                           )
                  )
 )

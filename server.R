@@ -8,6 +8,7 @@ preprocessed_data <- readRDS("final_data.RDS")
 metrics_smry <- preprocessed_data$metrics_smry
 primary_fb <- preprocessed_data$primary_fb
 df1 <- preprocessed_data$df1
+df2 <- preprocessed_data$df2
 rel_pt <- preprocessed_data$rel_pt
 pitch_dat <- preprocessed_data$pitch_dat
 norm_df <- preprocessed_data$norm_df
@@ -20,6 +21,7 @@ server <- function(input, output) {
     input_vector <- c(
       (input$H_Rel - rel_pt_row$h_rel_mean) / rel_pt_row$h_rel_sd,
       (input$V_Rel - rel_pt_row$v_rel_mean) / rel_pt_row$v_rel_sd,
+      (input$Ext - rel_pt_row$ext_mean) / rel_pt_row$ext_sd,
       (input$velo - pitch_dat_row$velo_mean) / pitch_dat_row$velo_sd,
       (input$H_Break - pitch_dat_row$h_break_mean) / pitch_dat_row$h_break_sd,
       (input$V_Break - pitch_dat_row$v_break_mean) / pitch_dat_row$v_break_sd
@@ -37,7 +39,7 @@ server <- function(input, output) {
     max_distance <- 0
     
     for (i in 1:length(filtered_comps$pitcher)) {
-      euclidean_dist <- sqrt(sum((as.numeric(as.vector(input_vector)) - as.numeric(as.vector(filtered_comps[i, 24:28])))^2))
+      euclidean_dist <- sqrt(sum((as.numeric(as.vector(input_vector)) - as.numeric(as.vector(filtered_comps[i, 27:32])))^2))
       d[i] <- euclidean_dist
       max_distance <- max(max_distance, euclidean_dist)
     }
@@ -118,4 +120,33 @@ server <- function(input, output) {
       `Similarity Score` = color_tile("white", "lightgreen")
     ))
   })
+  
+  output$mlbPitcherData <- renderFormattable({
+    
+    output_df <- df2 %>%
+      mutate(h_rel = round(h_rel, 1),
+             v_rel = round(v_rel, 1),
+             ext = round(ext, 1),
+             velo = round(velo, 1),
+             h_break = round(h_break, 1),
+             v_break = round(v_break, 1))
+    
+    colnames(output_df) <- c("MLBAM ID", "Name", "Primary FB",  "H Rel", "V Rel", "Ext", "Velo", "H Break", "IVB")
+    
+    formattable(output_df, list(
+      `MLBAM ID` = formatter("span", style = x ~ style(display = "block")),
+      `Name` = formatter("span", style = x ~ style(display = "block")),
+      `Primary FB` = formatter("span", style = x ~ style(display = "block")),
+      `H Rel` = formatter("span", style = x ~ style(display = "block")),
+      `V Rel` = formatter("span", style = x ~ style(display = "block")),
+      `Ext` = formatter("span", style = x ~ style(display = "block")),
+      `Velo` = formatter("span", style = x ~ style(display = "block")),
+      `H Break` = formatter("span", style = x ~ style(display = "block")),
+      `IVB` = formatter("span", style = x ~ style(display = "block"))))
+  })
+
 }
+
+  
+
+  

@@ -123,17 +123,16 @@ server <- function(input, output) {
   
   output$mlbPitcherData <- renderFormattable({
     
-    output_df <- df2 %>%
-      mutate(h_rel = round(h_rel, 1),
-             v_rel = round(v_rel, 1),
-             ext = round(ext, 1),
-             velo = round(velo, 1),
-             h_break = round(h_break, 1),
-             v_break = round(v_break, 1))
+    df3 <- if (input$name_filter == ""){
+      df2 %>%
+        head(50)
+    } else {
+      df2 %>%
+        filter(grepl(input$name_filter, Name, ignore.case = TRUE)) %>%
+        head(50)
+    }
     
-    colnames(output_df) <- c("MLBAM ID", "Name", "Primary FB",  "H Rel", "V Rel", "Ext", "Velo", "H Break", "IVB")
-    
-    formattable(output_df, list(
+    formattable(df3, list(
       `MLBAM ID` = formatter("span", style = x ~ style(display = "block")),
       `Name` = formatter("span", style = x ~ style(display = "block")),
       `Primary FB` = formatter("span", style = x ~ style(display = "block")),

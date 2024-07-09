@@ -35,7 +35,16 @@ df1 <- metrics_smry %>%
 
 df2 <- df1 %>%
   filter(pitch_type == primary_fb) %>%
-  select(pitcher, player_name, primary_fb, h_rel, v_rel, ext, velo, h_break, v_break)
+  select(pitcher, player_name, primary_fb, h_rel, v_rel, ext, velo, h_break, v_break) %>%
+  mutate(h_rel = round(h_rel, 1),
+         v_rel = round(v_rel, 1),
+         ext = round(ext, 1),
+         velo = round(velo, 1),
+         h_break = round(h_break, 1),
+         v_break = round(v_break, 1)) %>%
+  arrange(player_name)
+
+colnames(df2) <- c("MLBAM ID", "Name", "Primary FB",  "H Rel", "V Rel", "Ext", "Velo", "H Break", "IVB")
 
 rel_pt <- df1 %>%
   group_by(p_throws) %>%

@@ -36,7 +36,14 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                  ),
                  tabPanel("MLB Pitcher Data",
                           fluidPage(
-                            div(style = "text-align: center;", h3("Raw MLB Pitcher Data")),
+                            fluidRow(
+                              column(3, 
+                                     textInput("name_filter", "Filter by Name", value = "")
+                              ),
+                              column(9, 
+                                     div(style = "text-align: center;", h3("Raw MLB Pitcher Data"))
+                              )
+                            ),
                             div(style = "display: flex; justify-content: center;", 
                                 div(style = "width: 80%;", formattableOutput("mlbPitcherData")))
                           )

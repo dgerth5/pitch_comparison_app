@@ -6,8 +6,6 @@ statcast_data2024 <- read_csv("statcast_data_2024_2.csv")
 metrics_smry <- statcast_data2024 %>%
   drop_na(release_pos_x, release_pos_z, release_extension, release_speed, pfx_x, pfx_z) %>%
   filter(pitch_type %in% c("FF", "SI", "FC", "CH", "CU", "SL", "FS", "ST", "KC")) %>%
-  group_by(pitcher, player_name) %>%
-  mutate(total_pitches = n()) %>%
   group_by(pitcher, player_name, pitch_type, p_throws) %>%
   summarise(h_rel = mean(release_pos_x),
             v_rel = mean(release_pos_z),
@@ -15,9 +13,10 @@ metrics_smry <- statcast_data2024 %>%
             velo = mean(release_speed),
             h_break = mean(pfx_x)*12,
             v_break = mean(pfx_z)*12,
-            run_value = mean(delta_run_exp),
-            times_thrown = n(),
-            usage = n() / first(total_pitches) * 100) %>%
+            times_thrown = n()) %>%
+  ungroup() %>%
+  group_by(pitcher, player_name) %>%
+  mutate(usage = times_thrown / sum(times_thrown)*100) %>%
   filter(usage > 5) %>%
   ungroup()
 

@@ -16,7 +16,7 @@ norm_df <- preprocessed_data$norm_df
 server <- function(input, output) {
   filtered_data <- reactive({
     rel_pt_row <- rel_pt %>% filter(p_throws == input$release_point)
-    pitch_dat_row <- pitch_dat %>% filter(pitch_type == input$fastball_type)
+    pitch_dat_row <- pitch_dat %>% filter(pitch_type == input$fastball_type) %>% filter(p_throws == input$release_point)
     
     input_vector <- c(
       (input$H_Rel - rel_pt_row$h_rel_mean) / rel_pt_row$h_rel_sd,
@@ -39,7 +39,7 @@ server <- function(input, output) {
     max_distance <- 0
     
     for (i in 1:length(filtered_comps$pitcher)) {
-      euclidean_dist <- sqrt(sum((as.numeric(as.vector(input_vector)) - as.numeric(as.vector(filtered_comps[i, 27:32])))^2))
+      euclidean_dist <- sqrt(sum((as.numeric(as.vector(input_vector)) - as.numeric(as.vector(filtered_comps[i, 26:31])))^2))
       d[i] <- euclidean_dist
       max_distance <- max(max_distance, euclidean_dist)
     }

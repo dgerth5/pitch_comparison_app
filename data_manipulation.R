@@ -55,7 +55,7 @@ rel_pt <- df1 %>%
             ext_sd = sd(ext))
 
 pitch_dat <- df1 %>%
-  group_by(pitch_type) %>%
+  group_by(p_throws, pitch_type) %>%
   summarise(velo_mean = mean(velo),
             velo_sd = sd(velo),
             h_break_mean = mean(h_break),
@@ -65,12 +65,14 @@ pitch_dat <- df1 %>%
 
 norm_df <- df1 %>%
   left_join(rel_pt, by = "p_throws") %>%
-  left_join(pitch_dat, by = "pitch_type") %>%
+  left_join(pitch_dat, by = c("p_throws", "pitch_type")) %>%
   mutate(n_hrp = (h_rel - h_rel_mean) / h_rel_sd,
          n_vrp = (v_rel - v_rel_mean) / v_rel_sd,
          n_ext = (ext - ext_mean) / ext_sd,
          n_velo = (velo - velo_mean) / velo_sd,
          n_hb = (h_break - h_break_mean) / h_break_sd,
          n_vb = (v_break - v_break_mean) / v_break_sd)
+
+colnames(norm_df)
 
 saveRDS(list(metrics_smry = metrics_smry, primary_fb = primary_fb, df1 = df1, df2 = df2, rel_pt = rel_pt, pitch_dat = pitch_dat, norm_df = norm_df), "final_data.RDS")

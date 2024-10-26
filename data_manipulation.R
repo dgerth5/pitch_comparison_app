@@ -1,7 +1,7 @@
 library(tidyverse)
 library(readr)
 
-statcast_data2024 <- read_csv("statcast_data_2024_2.csv")
+statcast_data2024 <- read_csv("statcast_data_full_2024.csv")
 
 metrics_smry <- statcast_data2024 %>%
   drop_na(release_pos_x, release_pos_z, release_extension, release_speed, pfx_x, pfx_z) %>%
@@ -16,7 +16,8 @@ metrics_smry <- statcast_data2024 %>%
             times_thrown = n()) %>%
   ungroup() %>%
   group_by(pitcher, player_name) %>%
-  mutate(usage = times_thrown / sum(times_thrown)*100) %>%
+  mutate(usage = times_thrown / sum(times_thrown)*100,
+         player_name = sapply(strsplit(player_name, ", "), function(x) paste(x[2], x[1]))) %>%
   filter(usage > 5) %>%
   ungroup()
 
@@ -33,8 +34,8 @@ df1 <- metrics_smry %>%
   drop_na()
 
 df2 <- df1 %>%
-  filter(pitch_type == primary_fb) %>%
-  select(pitcher, player_name, primary_fb, h_rel, v_rel, ext, velo, h_break, v_break) %>%
+  #filter(pitch_type == primary_fb) %>%
+  select(pitcher, player_name, pitch_type, h_rel, v_rel, ext, velo, h_break, v_break) %>%
   mutate(h_rel = round(h_rel, 1),
          v_rel = round(v_rel, 1),
          ext = round(ext, 1),
@@ -43,7 +44,7 @@ df2 <- df1 %>%
          v_break = round(v_break, 1)) %>%
   arrange(player_name)
 
-colnames(df2) <- c("MLBAM ID", "Name", "Primary FB",  "H Rel", "V Rel", "Ext", "Velo", "H Break", "IVB")
+colnames(df2) <- c("MLBAM ID", "Name", "Pitch Type",  "H Rel", "V Rel", "Ext", "Velo", "H Break", "IVB")
 
 rel_pt <- df1 %>%
   group_by(p_throws) %>%
@@ -73,6 +74,5 @@ norm_df <- df1 %>%
          n_hb = (h_break - h_break_mean) / h_break_sd,
          n_vb = (v_break - v_break_mean) / v_break_sd)
 
-colnames(norm_df)
 
 saveRDS(list(metrics_smry = metrics_smry, primary_fb = primary_fb, df1 = df1, df2 = df2, rel_pt = rel_pt, pitch_dat = pitch_dat, norm_df = norm_df), "final_data.RDS")

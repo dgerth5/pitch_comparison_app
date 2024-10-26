@@ -6,6 +6,10 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                           fluidPage(
                             fluidRow(
                               column(4,
+                                     h3("Select Player"),
+                                     selectInput("selected_player", "Choose Player", choices = unique(df2$Name), selected = NULL)
+                              ),
+                              column(4,
                                      h3("Release Point"),
                                      selectInput("release_point", "Throwing Hand", choices = c("R", "L")),
                                      numericInput("H_Rel", "Horizontal Release Point (ft)", value = -1.5),
@@ -16,7 +20,10 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                                      selectInput("fastball_type", "Primary Fastball Type", choices = c("FF", "SI", "FC")),
                                      numericInput("velo", "Velo (MPH)", value = 93),
                                      numericInput("H_Break", "Horizontal Break (in)", value = -7),
-                                     numericInput("V_Break", "IVB (in)", value = 15)),
+                                     numericInput("V_Break", "IVB (in)", value = 15)
+                              )
+                            ),
+                            fluidRow(
                               column(4,
                                      h3("Similarity Threshold"),
                                      selectInput("similarity_threshold", "Threshold", choices = c("50%", "66%", "75%", "80%", "90%"))

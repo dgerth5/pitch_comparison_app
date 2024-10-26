@@ -12,8 +12,28 @@ df2 <- preprocessed_data$df2
 rel_pt <- preprocessed_data$rel_pt
 pitch_dat <- preprocessed_data$pitch_dat
 norm_df <- preprocessed_data$norm_df
-
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  observeEvent(input$selected_player, {
+    selected_player_data <- df2 %>% filter(Name == input$selected_player)
+    
+    if (nrow(selected_player_data) > 0) {
+      updateNumericInput(session, "H_Rel", value = selected_player_data$`H Rel`[1])
+      updateNumericInput(session, "V_Rel", value = selected_player_data$`V Rel`[1])
+      updateNumericInput(session, "Ext", value = selected_player_data$Ext[1])
+      updateNumericInput(session, "velo", value = selected_player_data$Velo[1])
+      updateNumericInput(session, "H_Break", value = selected_player_data$`H Break`[1])
+      updateNumericInput(session, "V_Break", value = selected_player_data$IVB[1])
+      
+      pitcher_id <- selected_player_data$`MLBAM ID`[1]
+      p_throws <- df1 %>% filter(pitcher == pitcher_id) %>% pull(p_throws) %>% unique()
+      updateSelectInput(session, "release_point", selected = p_throws)
+      
+      updateSelectInput(session, "fastball_type", selected = selected_player_data$`Primary FB`[1])
+    }
+  })
+  
+  # Reactive for filtered data
   filtered_data <- reactive({
     rel_pt_row <- rel_pt %>% filter(p_throws == input$release_point)
     pitch_dat_row <- pitch_dat %>% filter(pitch_type == input$fastball_type) %>% filter(p_throws == input$release_point)
@@ -57,6 +77,7 @@ server <- function(input, output) {
     list(similar_players = e, bb = norm_df %>% filter(pitcher %in% unique(e$pitcher)))
   })
   
+  # Render tables
   output$resultTable <- renderFormattable({
     data <- filtered_data()
     bb <- data$bb
@@ -90,22 +111,16 @@ server <- function(input, output) {
     table_df <- blank_df %>%
       left_join(new_df, by = c("pitch_type", "pn")) %>%
       mutate(
-        unique_pitchers_percentage = if_else(coalesce(as.character(unique_pitchers_percentage.y), unique_pitchers_percentage.x) == "-", "-", paste0(as.character(unique_pitchers_percentage.y), "%")) ,
+        unique_pitchers_percentage = if_else(coalesce(as.character(unique_pitchers_percentage.y), unique_pitchers_percentage.x) == "-", "-", paste0(as.character(unique_pitchers_percentage.y), "%")),
         avg_velo = coalesce(as.character(avg_velo.y), avg_velo.x),
         avg_h_break = coalesce(as.character(avg_h_break.y), avg_h_break.x),
         avg_v_break = coalesce(as.character(avg_v_break.y), avg_v_break.x)
       ) %>%
       dplyr::select(pitch_type, pn, unique_pitchers_percentage, avg_velo, avg_h_break, avg_v_break)
     
-    
     colnames(table_df) <- c("Pitch Code", "Pitch Name", "Percentage of Pitchers That Use", "Velo", "Horz Break", "IVB")
     
-    formattable(table_df, list(
-      `Percentage of Pitchers That Use` = formatter("span", style = x ~ style(display = "block"), format = "percentage"),
-      `Velo` = formatter("span", style = x ~ style(display = "block")),
-      `Horz Break` = formatter("span", style = x ~ style(display = "block")),
-      `IVB` = formatter("span", style = x ~ style(display = "block"))
-    ))
+    formattable(table_df)
   })
   
   output$similarPlayersTable <- renderFormattable({
@@ -122,7 +137,6 @@ server <- function(input, output) {
   })
   
   output$mlbPitcherData <- renderFormattable({
-    
     df3 <- if (input$name_filter == ""){
       df2 %>%
         head(50)
@@ -143,8 +157,9 @@ server <- function(input, output) {
       `H Break` = formatter("span", style = x ~ style(display = "block")),
       `IVB` = formatter("span", style = x ~ style(display = "block"))))
   })
-
+  
 }
+
 
   
 

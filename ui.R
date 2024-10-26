@@ -7,7 +7,8 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                             fluidRow(
                               column(4,
                                      h3("Select Player"),
-                                     selectInput("selected_player", "Choose Player", choices = unique(df2$Name), selected = NULL)
+                                     selectInput("selected_player", "Choose Player", choices = c("Select a Pitcher", unique(df2$Name)), selected = "Select a Pitcher"),
+                                     textOutput("pitcher_status") # Text output to show "CUSTOM PITCHER"
                               ),
                               column(4,
                                      h3("Release Point"),
@@ -56,3 +57,4 @@ ui <- navbarPage("Pitcher Similarity and Arsenal Tool",
                           )
                  )
 )
+

@@ -12,11 +12,12 @@ df2 <- preprocessed_data$df2
 rel_pt <- preprocessed_data$rel_pt
 pitch_dat <- preprocessed_data$pitch_dat
 norm_df <- preprocessed_data$norm_df
+
 server <- function(input, output, session) {
-  
+
   observeEvent(input$selected_player, {
     selected_player_data <- df2 %>% filter(Name == input$selected_player)
-    
+
     if (nrow(selected_player_data) > 0) {
       updateNumericInput(session, "H_Rel", value = selected_player_data$`H Rel`[1])
       updateNumericInput(session, "V_Rel", value = selected_player_data$`V Rel`[1])
@@ -24,20 +25,20 @@ server <- function(input, output, session) {
       updateNumericInput(session, "velo", value = selected_player_data$Velo[1])
       updateNumericInput(session, "H_Break", value = selected_player_data$`H Break`[1])
       updateNumericInput(session, "V_Break", value = selected_player_data$IVB[1])
-      
+
       pitcher_id <- selected_player_data$`MLBAM ID`[1]
       p_throws <- df1 %>% filter(pitcher == pitcher_id) %>% pull(p_throws) %>% unique()
       updateSelectInput(session, "release_point", selected = p_throws)
-      
+
       updateSelectInput(session, "fastball_type", selected = selected_player_data$`Primary FB`[1])
     }
   })
-  
+
   # Reactive for filtered data
   filtered_data <- reactive({
     rel_pt_row <- rel_pt %>% filter(p_throws == input$release_point)
     pitch_dat_row <- pitch_dat %>% filter(pitch_type == input$fastball_type) %>% filter(p_throws == input$release_point)
-    
+
     input_vector <- c(
       (input$H_Rel - rel_pt_row$h_rel_mean) / rel_pt_row$h_rel_sd,
       (input$V_Rel - rel_pt_row$v_rel_mean) / rel_pt_row$v_rel_sd,
@@ -46,43 +47,43 @@ server <- function(input, output, session) {
       (input$H_Break - pitch_dat_row$h_break_mean) / pitch_dat_row$h_break_sd,
       (input$V_Break - pitch_dat_row$v_break_mean) / pitch_dat_row$v_break_sd
     )
-    
+
     input_vector <- ifelse(is.finite(input_vector), input_vector, 0)
-    
+
     filtered_comps <- norm_df %>%
       filter(p_throws == input$release_point) %>%
       filter(primary_fb == input$fastball_type) %>%
       filter(pitch_type == input$fastball_type)
-    
+
     # Calculate Euclidean distance and similarity score
     d <- numeric(length(filtered_comps$pitcher))
     max_distance <- 0
-    
+
     for (i in 1:length(filtered_comps$pitcher)) {
       euclidean_dist <- sqrt(sum((as.numeric(as.vector(input_vector)) - as.numeric(as.vector(filtered_comps[i, 26:31])))^2))
       d[i] <- euclidean_dist
       max_distance <- max(max_distance, euclidean_dist)
     }
-    
+
     # Calculate similarity score
     filtered_comps$similarity <- 1 - (d / max_distance)
-    
+
     # Get similarity threshold
     threshold <- as.numeric(gsub("%", "", input$similarity_threshold)) / 100
     num_to_keep <- ceiling(threshold * length(filtered_comps$pitcher))
-    
+
     e <- filtered_comps %>%
       filter(similarity >= threshold)
-    
+
     list(similar_players = e, bb = norm_df %>% filter(pitcher %in% unique(e$pitcher)))
   })
-  
+
   # Render tables
   output$resultTable <- renderFormattable({
     data <- filtered_data()
     bb <- data$bb
     total_unique_pitchers <- n_distinct(bb$pitcher)
-    
+
     new_df <- bb %>%
       filter(pitch_type %in% c("CH", "SL", "CU", "ST", "FS")) %>%
       group_by(pitch_type) %>%
@@ -100,14 +101,14 @@ server <- function(input, output, session) {
         pitch_type == "FS" ~ "Splitter"
       )) %>%
       dplyr::select(pitch_type, pn, unique_pitchers_percentage, avg_velo, avg_h_break, avg_v_break)
-    
+
     blank_df <- data.frame(pitch_type = c("CH", "SL", "CU", "ST", "FS"),
                            pn = c("Changeup", "Slider", "Curveball", "Sweeper", "Splitter"),
                            unique_pitchers_percentage = rep("-", 5),
                            avg_velo = rep("-", 5),
                            avg_h_break = rep("-", 5),
                            avg_v_break = rep("-", 5))
-    
+
     table_df <- blank_df %>%
       left_join(new_df, by = c("pitch_type", "pn")) %>%
       mutate(
@@ -117,25 +118,25 @@ server <- function(input, output, session) {
         avg_v_break = coalesce(as.character(avg_v_break.y), avg_v_break.x)
       ) %>%
       dplyr::select(pitch_type, pn, unique_pitchers_percentage, avg_velo, avg_h_break, avg_v_break)
-    
+
     colnames(table_df) <- c("Pitch Code", "Pitch Name", "Percentage of Pitchers That Use", "Velo", "Horz Break", "IVB")
-    
+
     formattable(table_df)
   })
-  
+
   output$similarPlayersTable <- renderFormattable({
     data <- filtered_data()
     similar_players <- data$similar_players %>%
       arrange(-similarity) %>%
       select(player_name, similarity)
-    
+
     colnames(similar_players) <- c("Name", "Similarity Score")
-    
+
     formattable(similar_players, list(
       `Similarity Score` = color_tile("white", "lightgreen")
     ))
   })
-  
+
   output$mlbPitcherData <- renderFormattable({
     df3 <- if (input$name_filter == ""){
       df2 %>%
@@ -145,7 +146,7 @@ server <- function(input, output, session) {
         filter(grepl(input$name_filter, Name, ignore.case = TRUE)) %>%
         head(50)
     }
-    
+
     formattable(df3, list(
       `MLBAM ID` = formatter("span", style = x ~ style(display = "block")),
       `Name` = formatter("span", style = x ~ style(display = "block")),
@@ -157,10 +158,5 @@ server <- function(input, output, session) {
       `H Break` = formatter("span", style = x ~ style(display = "block")),
       `IVB` = formatter("span", style = x ~ style(display = "block"))))
   })
-  
+
 }
-
-
-  
-
-  
